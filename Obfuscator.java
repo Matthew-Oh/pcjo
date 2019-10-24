@@ -194,13 +194,47 @@ public class Obfuscator
                 String symb = activeLine.substring(linePos,linePos+1);
                 //System.out.print(symb);
                 simp.add(new Figure(symb,Figure.FigureType.SYMB));
-                advance();
+                if (symb.equals("\"") || symb.equals("\'"))
+                {
+                    String quote = "";
+                    boolean flag = true;
+                    advance();
+                    while (flag)
+                    {
+                        if (canAdvance())
+                        {
+                            //ensures that found quote is not a control quote
+                            if (activeLine.substring(linePos,linePos+1).equals(symb))
+                            {
+                                if (activeLine.substring(linePos-1,linePos).equals("\\"))
+                                {
+                                    if (activeLine.substring(linePos-2,linePos-1).equals("\\"))
+                                        flag = false;
+                                    else
+                                        flag = true;
+                                }
+                                else
+                                    flag = false;
+                            }
+                        }
+                        else
+                            flag = false;
+                        if (flag)
+                            quote += activeLine.charAt(linePos);
+                        advance();
+                    }
+                    simp.add(new Figure(quote,Figure.FigureType.QUTE));
+                    simp.add(new Figure(symb,Figure.FigureType.SYMB));
+                }
+                else
+                    advance();
             }
         }
     }
     
     /**
      * Scans the condenced source code
+     * obsolete (probably)
      */
     private void scanFig()
     {
@@ -332,7 +366,7 @@ public class Obfuscator
                     }
                 }
             }
-            else
+            else if (simp.get(figPos).getType() == Figure.FigureType.WORD)
             {
                 String word = simp.get(figPos).getText();
                 if (word.equals("import"))

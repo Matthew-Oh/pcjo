@@ -7,10 +7,9 @@ It's really just "a lot of" text parsing, so there will probably be lots of limi
 
 Scans a single file and identifies class, imports, variables, and methods names.
 Creates codenames for class, variable and methods.
-Creates new file using codenames (quote spacing not preserved).
+Creates new file using codenames.
 
 Stuff to be implemented:
--properly preserving quotes
 -reading from multiple files or a folder
 -enumerations
 -manual ignore
