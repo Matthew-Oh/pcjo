@@ -26,6 +26,7 @@ public class Obfuscator
     public enum StatementType
     {IMPORT, CLASSDEC, VARDEC, METHODDEC, OTHER}
     
+    //PCJO_IGNORE_1
     public static void main(String[] args)
     {
         Obfuscator ob = new Obfuscator("KTour.java");
@@ -70,7 +71,6 @@ public class Obfuscator
         scanFig();
         generateCypher();
         System.out.println("SCAN DONE");
-        generateCypher();
         for (Cypher c: cypher)
         {
             System.out.println(c.getOriginal() + " // " + c.getCoded());
@@ -116,6 +116,7 @@ public class Obfuscator
         {
             if (classStarted)
             {
+                //checks if the figure is a name that needs to be obfuscated
                 boolean nonOb = true; //tracks if figure is an obfuscated figure
                 for (int i = 0; i < cypher.size(); i++)
                 {
@@ -126,7 +127,7 @@ public class Obfuscator
                         i = cypher.size();
                     }
                 }
-                if (nonOb)
+                if (nonOb && f.getType() != Figure.FigureType.IGNORE)
                     obSimp.add(f);
             }
             else
@@ -151,30 +152,6 @@ public class Obfuscator
     }
     
     /**
-     * Simplifies the source code into a chain of Figures
-     */
-    private void simplify()
-    {
-        while (canAdvance())
-        {
-            seek();
-            if (Character.isLetterOrDigit(activeLine.charAt(linePos)))
-            {
-                String word = readWord();
-                //System.out.print(word + " ");
-                simp.add(new Figure(word,Figure.FigureType.WORD));
-            }
-            else
-            {
-                String symb = activeLine.substring(linePos,linePos+1);
-                //System.out.print(symb);
-                simp.add(new Figure(symb,Figure.FigureType.SYMB));
-                advance();
-            }
-        }
-    }
-    
-    /**
      * simplifies code with quotes
      * wip stuff fix later idiot
      */
@@ -193,7 +170,7 @@ public class Obfuscator
             {
                 String symb = activeLine.substring(linePos,linePos+1);
                 //System.out.print(symb);
-                simp.add(new Figure(symb,Figure.FigureType.SYMB));
+                simp.add(new Figure(symb,Figure.FigureType.SYMBOL));
                 if (symb.equals("\"") || symb.equals("\'"))
                 {
                     String quote = "";
@@ -223,8 +200,8 @@ public class Obfuscator
                             quote += activeLine.charAt(linePos);
                         advance();
                     }
-                    simp.add(new Figure(quote,Figure.FigureType.QUTE));
-                    simp.add(new Figure(symb,Figure.FigureType.SYMB));
+                    simp.add(new Figure(quote,Figure.FigureType.QUOTE));
+                    simp.add(new Figure(symb,Figure.FigureType.SYMBOL));
                 }
                 else
                     advance();
@@ -234,10 +211,11 @@ public class Obfuscator
     
     /**
      * Scans the condenced source code
-     * obsolete (probably)
+     * obsolete (probably)????
      */
     private void scanFig()
     {
+        int ignore = 0;
         while (figPos < simp.size())
         {
             String word = simp.get(figPos).getText();
@@ -266,6 +244,11 @@ public class Obfuscator
             }
             else
             {
+                if (word.indexOf("<ignore") == 0)
+                {
+                    ignore = Integer.parseInt(word.substring(7,8));
+                    word = simp.get(++figPos).getText();
+                }
                 //method/variable declaration
                 //ignores access type
                 if (word.equals("public") || word.equals("private") || word.equals("protected"))
@@ -283,7 +266,7 @@ public class Obfuscator
                         if (simp.get(figPos).getText().equals("<"))
                             figPos += 3;
                         Figure fig = simp.get(figPos);
-                        while (fig.getType() == Figure.FigureType.SYMB)
+                        while (fig.getType() == Figure.FigureType.SYMBOL)
                         {
                             figPos++;
                             fig = simp.get(figPos);
@@ -293,21 +276,37 @@ public class Obfuscator
                         //determines if the line is a method or a variable
                         if (simp.get(figPos).getText().equals("("))
                         {
-                            //method declaration
-                            methods.add(name);
-                            //cypher.add(new Cypher(name));
-                            addCypher(name);
+                            if (ignore <= 0)
+                            {
+                                //method declaration
+                                methods.add(name);
+                                //cypher.add(new Cypher(name));
+                                addCypher(name);
+                                System.out.println("METHOD: " + name + " (" + word + ")");
+                            }
+                            else
+                            {
+                                System.out.println("IGNORE METHOD: " + name + " (" + word + ")");
+                                ignore--;
+                            }
                             figPos++;
-                            System.out.println("MTDDEC: " + name + " (" + word + ")");
                         }
                         else
                         {
-                            //variable declaration
-                            variables.add(name);
-                            //cypher.add(new Cypher(name));
-                            addCypher(name);
+                            if (ignore <= 0)
+                            {
+                                //variable declaration
+                                variables.add(name);
+                                //cypher.add(new Cypher(name));
+                                addCypher(name);
+                                System.out.println("VARIABLE: " + name + " (" + word + ")");
+                            }
+                            else
+                            {
+                                System.out.println("IGNORE VARIABLE: " + name + " (" + word + ")");
+                                ignore--;
+                            }
                             figPos++;
-                            System.out.println("VARDEC: " + name + " (" + word + ")");
                         }
                     }
                 }
@@ -321,142 +320,13 @@ public class Obfuscator
                     dataTypes.add(name);
                     //cypher.add(new Cypher(name));
                     addCypher(name);
-                    System.out.println("CLSDEC: " + name);
-                    while (simp.get(figPos).getType() != Figure.FigureType.SYMB)
+                    System.out.println("CLASS: " + name);
+                    while (simp.get(figPos).getType() != Figure.FigureType.SYMBOL)
                         figPos++;
                 }
                 else
                 {
                     figPos++;
-                }
-            }
-        }
-    }
-    
-    /**
-     * version of scanFig that ignores quotes
-     */
-    private void scanFigNQ()
-    {
-        while (figPos < simp.size())
-        {
-            if (simp.get(figPos).getType() == Figure.FigureType.SYMB)
-            {
-                String symbol = simp.get(figPos).getText();
-                //if a quotation is found, dont scan data until next quote
-                if (symbol.equals("\"") || symbol.equals("\'"))
-                {
-                    boolean flag = true;
-                    while (flag)
-                    {
-                        figPos++;
-                        //ensures that found quote is not a control quote
-                        if (simp.get(figPos).getText().equals(symbol))
-                        {
-                            if (simp.get(figPos-1).getText().equals("\\"))
-                            {
-                                if (simp.get(figPos-2).getText().equals("\\"))
-                                    flag = false;
-                                else
-                                    flag = true;
-                            }
-                            else
-                                flag = false;
-                        }
-                    }
-                }
-            }
-            else if (simp.get(figPos).getType() == Figure.FigureType.WORD)
-            {
-                String word = simp.get(figPos).getText();
-                if (word.equals("import"))
-                {
-                    //imported classes
-                    figPos++;
-                    word = simp.get(figPos).getText();
-                    while (!simp.get(figPos+1).getText().equals(";"))
-                    {
-                        figPos++;
-                        word = simp.get(figPos).getText();
-                    }
-                    String name = simp.get(figPos).getText();
-                    //IMPORT
-                    dataTypes.add(name);
-                    figPos++;
-                    System.out.println("IMPORT: " + name);
-                }
-                else if (word.equals("new"))
-                {
-                    do
-                    {
-                        figPos++;
-                    } while (!simp.get(figPos).getText().equals(";"));
-                }
-                else
-                {
-                    //method/variable declaration
-                    //ignores access type
-                    if (word.equals("public") || word.equals("private") || word.equals("protected"))
-                        word = simp.get(++figPos).getText();
-                    if (word.equals("static"))
-                        word = simp.get(++figPos).getText();
-                    //checks if dataType is detected
-                    if (checkDataType(word))
-                    {
-                        figPos++;
-                        //ignores contstructors
-                        if (!simp.get(figPos).getText().equals("("))
-                        {
-                            //ignores generics
-                            if (simp.get(figPos).getText().equals("<"))
-                                figPos += 3;
-                            Figure fig = simp.get(figPos);
-                            while (fig.getType() == Figure.FigureType.SYMB)
-                            {
-                                figPos++;
-                                fig = simp.get(figPos);
-                            }
-                            String name = fig.getText();
-                            figPos++;
-                            //determines if the line is a method or a variable
-                            if (simp.get(figPos).getText().equals("("))
-                            {
-                                //method declaration
-                                methods.add(name);
-                                //cypher.add(new Cypher(name));
-                                addCypher(name);
-                                figPos++;
-                                System.out.println("MTDDEC: " + name + " (" + word + ")");
-                            }
-                            else
-                            {
-                                //variable declaration
-                                variables.add(name);
-                                //cypher.add(new Cypher(name));
-                                addCypher(name);
-                                figPos++;
-                                System.out.println("VARDEC: " + name + " (" + word + ")");
-                            }
-                        }
-                    }
-                    else if (word.equals("class"))
-                    {
-                        //class declaration
-                        //CLASSDEC
-                        figPos++;
-                        String name = simp.get(figPos).getText();
-                        figPos++;
-                        dataTypes.add(name);
-                        //cypher.add(new Cypher(name));
-                        addCypher(name);
-                        System.out.println("CLSDEC: " + name);
-                        while (simp.get(figPos).getType() != Figure.FigureType.SYMB)
-                            figPos++;
-                    }
-                    else
-                    {
-                        figPos++;
-                    }
                 }
             }
         }
@@ -505,6 +375,19 @@ public class Obfuscator
                         //determines if the slash is a single or multiline comment, or not a comment
                         if (activeLine.charAt(linePos+1) == '/')
                         {
+                            //checks for manual ignore
+                            String rem = activeLine.substring(linePos+2);
+                            //checks if remaining line is long enough 
+                            if (rem.length() >= 13)
+                            {
+                                int i = rem.indexOf("PCJO_IGNORE_"); //13 long
+                                //note: only allows up to 9 ignores from one statement
+                                if (i >= 0)
+                                {
+                                    int count = Integer.parseInt(rem.substring(i + 12,i + 13));
+                                    simp.add(new Figure("<ignore" + count + ">",Figure.FigureType.IGNORE));
+                                }
+                            }
                             //skips to the next line
                             nextLine();
                         }
@@ -537,112 +420,6 @@ public class Obfuscator
                     }
                     else
                         cont = false;
-                    break;
-                default:
-                    cont = false;
-            }
-        }
-    }
-    
-    /**
-     * Seeks to non-white space
-     */
-    private void seek()
-    {
-        boolean cont = true;
-        boolean flag;
-        while (cont)
-        {
-            if (linePos >= activeLine.length())
-                nextLine();
-            switch (activeLine.charAt(linePos))
-            {
-                case ' ':
-                    advance();
-                    break;
-                //ignores comments
-                case '/':
-                    //determines if the slash could be a comment
-                    if (linePos + 1 < activeLine.length())
-                    {
-                        //determines if the slash is a single or multiline comment, or not a comment
-                        if (activeLine.charAt(linePos+1) == '/')
-                        {
-                            //skips to the next line
-                            nextLine();
-                        }
-                        else if (activeLine.charAt(linePos+1) == '*')
-                        {
-                            //ignores all data until the end of the multiline comment
-                            advance(); advance();
-                            flag = true;
-                            while (flag)
-                            {
-                                //checks if next two characters are the end of the comment
-                                if (linePos + 1 < activeLine.length()
-                                && activeLine.charAt(linePos) == '*'
-                                && activeLine.charAt(linePos+1) == '/')
-                                    {advance(); advance(); flag = false;}
-                                else
-                                {
-                                    //continues
-                                    advance();
-                                    if (!canAdvance())
-                                    {
-                                        flag = false;
-                                        cont = false;
-                                    }
-                                }
-                            }
-                        }
-                        else
-                            cont = false;
-                    }
-                    else
-                        cont = false;
-                    break;
-                //ignores quotes
-                case '\"':
-                    advance();
-                    flag = true;
-                    while (flag)
-                    {
-                        //checks for the end quote
-                        if (linePos < activeLine.length()
-                        && activeLine.charAt(linePos) == '\"')
-                        {advance(); flag = false;}
-                        else
-                        {
-                            //continues
-                            advance();
-                            if (!canAdvance())
-                            {
-                                flag = false;
-                                cont = false;
-                            }
-                        }
-                    }
-                    break;
-                case '\'':
-                    advance();
-                    flag = true;
-                    while (flag)
-                    {
-                        //checks for the end quote
-                        if (linePos < activeLine.length()
-                        && activeLine.charAt(linePos) == '\'')
-                        {advance(); flag = false;}
-                        else
-                        {
-                            //continues
-                            advance();
-                            if (!canAdvance())
-                            {
-                                flag = false;
-                                cont = false;
-                            }
-                        }
-                    }
                     break;
                 default:
                     cont = false;
@@ -661,27 +438,6 @@ public class Obfuscator
                 return true;
         }
         return false;
-    }
-    
-    /**
-     * Reads a word from the current postion in the current string
-     */
-    private String readWord()
-    {
-        seek();
-        if (canAdvance())
-        {
-            String word = "";
-            char character = activeLine.charAt(linePos);
-            while(Character.isLetterOrDigit(character))
-            {
-                word += character;
-                advance();
-                character = activeLine.charAt(linePos);
-            }
-            return word;
-        }
-        return null;
     }
     
     /**

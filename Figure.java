@@ -6,7 +6,7 @@
 public class Figure
 {
     public enum FigureType
-    {WORD, SYMB, QUTE}
+    {WORD, SYMBOL, QUOTE, IGNORE}
 
     private String text;
     private FigureType type;
