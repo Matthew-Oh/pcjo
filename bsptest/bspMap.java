@@ -7,7 +7,7 @@ import javafx.scene.paint.Color;
 public class bspMap
 {
     private Tile[][] map;
-    private static int size = 100;
+    private static int size = 500;
     private static int subdiv = 4;
     private static int idCount = 1; //testing
     private static Group group; //visual testing

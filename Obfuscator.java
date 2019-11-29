@@ -13,7 +13,7 @@ public class Obfuscator
     private ArrayList<String> text; //source code condenced into a list of Strings
     private ArrayList<Figure> simp = new ArrayList<Figure>(); //source code condenced into a list of "Figures"
     private ArrayList<Figure> obSimp = new ArrayList<Figure>(); //obfuscated form of simp
-    private String activeLine; //active soure code line
+    private String activeLine; //active soure code lines
     private int line; //active source code line number
     private int linePos; //character position in activeLine
     private int figPos; //index position in simp
@@ -76,7 +76,12 @@ public class Obfuscator
         {
             String name = f.getName();
             if (name.substring(name.length()-5,name.length()).equals(".java"))
+            {
                 javaFiles.add(f);
+                String className = f.getName().substring(0,f.getName().length()-5);
+                cypher.add(new Cypher(className));
+                dataTypes.add(className);
+            }
         }
         
         //simplifies and scans all java files
@@ -364,10 +369,10 @@ public class Obfuscator
                         boolean valid = true;
                         while (fig.getType() == Figure.FigureType.SYMBOL)
                         {
+                            if (!fig.getText().equals("[") && !fig.getText().equals("]"))
+                                valid = false;
                             figPos++;
                             fig = simp.get(figPos);
-                            if (!fig.getText().equals(" ") && !fig.getText().equals("[") && !fig.getText().equals("]"))
-                                valid = false;
                         }
                         if (valid)
                         {
