@@ -21,19 +21,24 @@ public class Obfuscator
     private ArrayList<String> variables = new ArrayList<String>(); //names of variables
     private ArrayList<String> methods = new ArrayList<String>(); //names of methods
     private ArrayList<Cypher> cypher = new ArrayList<Cypher>(); //cyphered names
+    private File[] files;
     
     //obsolete, use for testing later or something
     public enum StatementType
     {IMPORT, CLASSDEC, VARDEC, METHODDEC, OTHER}
     
-    //PCJO_IGNORE_1
+    //PCJO_IGNORE_2
     public static void main(String[] args)
     {
-        Obfuscator ob = new Obfuscator("KTour.java");
+        //Obfuscator ob = new Obfuscator("KTour.java", false);
+        Obfuscator ob = new Obfuscator("bsptest", true);
         //System.out.println(ob.readWord());
     }
     
-    public Obfuscator(String path)
+    /**
+     * note, i think File has a "isDirectory" method or something
+     */
+    public Obfuscator(String path, boolean isFolder)
     {
         //adds basic data types
         dataTypes.add("boolean");
@@ -51,6 +56,94 @@ public class Obfuscator
         dataTypes.add("Object");
         dataTypes.add("Exception");
         
+        if (isFolder)
+            obFolder(path);
+        else
+            obFile(path);
+    }
+    
+    /**
+     * Obfuscates all .java files in a folder
+     * its really just a work around my own garbage code
+     */
+    private void obFolder(String path)
+    {
+        System.out.println("OBFUSCATE FOLDER " + path);
+        File[] allFiles = new File(path).listFiles();
+        ArrayList<File> javaFiles = new ArrayList<File>();
+        //determines which files are .java's
+        for (File f: allFiles)
+        {
+            String name = f.getName();
+            if (name.substring(name.length()-5,name.length()).equals(".java"))
+                javaFiles.add(f);
+        }
+        
+        //simplifies and scans all java files
+        //stores the simplified code for all files
+        ArrayList<ArrayList<Figure>> fileFigs = new ArrayList<ArrayList<Figure>>();
+        for (File f: javaFiles)
+        {
+            System.out.println("\nOBFUSCATE FILE " + f.getName());
+            //opens file
+            try 
+            {
+                scanner = new Scanner(f);
+            }
+            catch (Exception e)
+            {
+                //dont
+            }
+            
+            //reads file into text
+            text = new ArrayList<String>();
+            for (int i = 0; scanner.hasNext(); i++)
+                text.add(scanner.nextLine());
+            activeLine = text.get(0);
+            linePos = 0;
+            line = 0;
+            figPos = 0;
+            
+            simplifyNQ();
+            scanFig();
+            
+            fileFigs.add(simp);
+            simp = new ArrayList<Figure>();
+        }
+        
+        generateCypher();
+        System.out.println("SCAN DONE");
+        for (Cypher c: cypher)
+        {
+            System.out.println(c.getOriginal() + " // " + c.getCoded());
+        }
+        
+        for (int i = 0; i < javaFiles.size(); i++)
+        {
+            File file = javaFiles.get(i);
+            ArrayList<Figure> simpFile = fileFigs.get(i);
+            String name = file.getName().substring(0,file.getName().length()-5);
+            simp = simpFile;
+            obSimp = new ArrayList<Figure>();
+            obfuscateFig();
+            for (int j = 0; j < cypher.size(); j++)
+            {
+                if (name.equals(cypher.get(j).getOriginal()))
+                {
+                    name = cypher.get(j).getCoded() + ".java";
+                    j = cypher.size();
+                }
+            }
+            createObfuscated(name);
+        }
+    }
+    
+    /**
+     * Obfuscates a single file
+     */
+    private void obFile(String path)
+    {
+        System.out.println("OBFUSCATE FILE " + path);
         //opens file
         try 
         {
@@ -76,17 +169,17 @@ public class Obfuscator
             System.out.println(c.getOriginal() + " // " + c.getCoded());
         }
         obfuscateFig();
-        createObfuscated();
+        createObfuscated("obfuscatedfile");
         System.out.println("DONE");
     }
     
-    private void createObfuscated()
+    private void createObfuscated(String name)
     {
         Formatter f = null;
         try
         {
-            f = new Formatter("obfuscatedfile");
-            System.out.println("FILE CREATED");
+            f = new Formatter(name);
+            System.out.println("CREATED FILE " + name);
         }
         catch (Exception e)
         {
@@ -180,6 +273,7 @@ public class Obfuscator
                     {
                         if (canAdvance())
                         {
+                            //should proabably count the number of slashes before the quote and judge based on that
                             //ensures that found quote is not a control quote
                             if (activeLine.substring(linePos,linePos+1).equals(symb))
                             {
@@ -266,47 +360,54 @@ public class Obfuscator
                         if (simp.get(figPos).getText().equals("<"))
                             figPos += 3;
                         Figure fig = simp.get(figPos);
+                        //ensures that the statement is actually a declaration
+                        boolean valid = true;
                         while (fig.getType() == Figure.FigureType.SYMBOL)
                         {
                             figPos++;
                             fig = simp.get(figPos);
+                            if (!fig.getText().equals(" ") && !fig.getText().equals("[") && !fig.getText().equals("]"))
+                                valid = false;
                         }
-                        String name = fig.getText();
-                        figPos++;
-                        //determines if the line is a method or a variable
-                        if (simp.get(figPos).getText().equals("("))
+                        if (valid)
                         {
-                            if (ignore <= 0)
+                            String name = fig.getText();
+                            figPos++;
+                            //determines if the line is a method or a variable
+                            if (simp.get(figPos).getText().equals("("))
                             {
-                                //method declaration
-                                methods.add(name);
-                                //cypher.add(new Cypher(name));
-                                addCypher(name);
-                                System.out.println("METHOD: " + name + " (" + word + ")");
+                                if (ignore <= 0)
+                                {
+                                    //method declaration
+                                    methods.add(name);
+                                    //cypher.add(new Cypher(name));
+                                    addCypher(name);
+                                    System.out.println("METHOD: " + name + " (" + word + ")");
+                                }
+                                else
+                                {
+                                    System.out.println("IGNORE METHOD: " + name + " (" + word + ")");
+                                    ignore--;
+                                }
+                                figPos++;
                             }
                             else
                             {
-                                System.out.println("IGNORE METHOD: " + name + " (" + word + ")");
-                                ignore--;
+                                if (ignore <= 0)
+                                {
+                                    //variable declaration
+                                    variables.add(name);
+                                    //cypher.add(new Cypher(name));
+                                    addCypher(name);
+                                    System.out.println("VARIABLE: " + name + " (" + word + ")");
+                                }
+                                else
+                                {
+                                    System.out.println("IGNORE VARIABLE: " + name + " (" + word + ")");
+                                    ignore--;
+                                }
+                                figPos++;
                             }
-                            figPos++;
-                        }
-                        else
-                        {
-                            if (ignore <= 0)
-                            {
-                                //variable declaration
-                                variables.add(name);
-                                //cypher.add(new Cypher(name));
-                                addCypher(name);
-                                System.out.println("VARIABLE: " + name + " (" + word + ")");
-                            }
-                            else
-                            {
-                                System.out.println("IGNORE VARIABLE: " + name + " (" + word + ")");
-                                ignore--;
-                            }
-                            figPos++;
                         }
                     }
                 }
