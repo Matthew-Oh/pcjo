@@ -5,8 +5,10 @@ import javafx.scene.Scene;
 
 public class fxtest extends Application
 {
+	//<PCJO_IGNORE_2>
     public static void main(String[] args) {launch(args);}
     
+	//<PCJO_IGNORE_2>
     public void start(Stage stage)
     {
         Group items = new Group();

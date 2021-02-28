@@ -1,19 +1,15 @@
-pcjo - Pre-Compiler Java Obfuscator
-Matthew Oh
-10/9/19 - 11/29/19
+# pcjo - Pre-Compiler Java Obfuscator
 
-Pretty self-explainitory.
-It's really just "a lot of" text parsing, so there will probably be lots of limitations to it.
 
-Scans a single file or a folder of files and identifies class, imports, variables, and methods names.
-Creates codenames for class, variable and methods.
-Creates new files using codenames.
-Can manually ignore statements by putting a comment before the next statements; "//PCJO_IGNORE_4" will ignore the next 4 declarations. Only works for a single digit, probably shouldn't need more than 9 realistically.
+Obfuscates java code by reading java source files and creating a new version with obfuscated identifiers.  
+It is just a lot of text parsing, and there is likely to be a lot of limitations.  
 
-11/29/19
-I guess this program is actually in a working state at this. The code is kind of a mess, and there is probably a lot of bugs and glitches, but it seems to work fine on bsptest. It might glitch and override the actual source code, so I would make sure to backup the source code just to be safe.
+## Usage
 
-Stuff to be implemented:
--enumerations
--some kind of interface?
--make the code less garbage?
+Pass the name of a java file or folder of java files that is in the input folder as a command line argument to Obfuscator's main method.  
+You can ignore obfuscation for new identifiers by commenting `//<PJCO_IGNORE_#>`, replacing the # with the number of new indentifiers to be ignored after the comment.
+
+##
+
+Matthew Oh  
+10/9/19 - 11/29/19  

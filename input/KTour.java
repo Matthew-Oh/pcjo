@@ -16,7 +16,7 @@ public class KTour
     private int xPos; //the knight's horizontal position
     private int yPos; //the knight's vertical position
     
-    //PCJO_IGNORE_2
+    //<PCJO_IGNORE_2>
     public static void main(String[] args)
     {
         KTour game;game = new KTour();

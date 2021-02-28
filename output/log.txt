@@ -1,0 +1,214 @@
+CREATED LOG FILE
+OBFUSCATE FOLDER bsptest
+
+OBFUSCATE FILE bspMap.java
+IMPORT: ArrayList
+IMPORT: Group
+IMPORT: Rectangle
+IMPORT: Label
+IMPORT: Color
+CLASS: bspMap
+VARIABLE: map (Tile)
+VARIABLE: size (int)
+VARIABLE: subdiv (int)
+VARIABLE: idCount (int)
+VARIABLE: group (Group)
+VARIABLE: absRoot (RoomRoot)
+VARIABLE: g (Group)
+METHOD: display (void)
+VARIABLE: col (int)
+VARIABLE: row (int)
+METHOD: divide (void)
+METHOD: divide (void)
+VARIABLE: root (RoomRoot)
+VARIABLE: count (int)
+VARIABLE: xSi (int)
+VARIABLE: x (int)
+VARIABLE: child1 (RoomRoot)
+VARIABLE: child2 (RoomRoot)
+VARIABLE: r (Rectangle)
+VARIABLE: ySi (int)
+VARIABLE: y (int)
+VARIABLE: child1 (RoomRoot)
+VARIABLE: child2 (RoomRoot)
+VARIABLE: r (Rectangle)
+METHOD: generateRoom (void)
+VARIABLE: root (RoomRoot)
+VARIABLE: xPad (int)
+VARIABLE: yPad (int)
+VARIABLE: xS (int)
+VARIABLE: yS (int)
+VARIABLE: xP (int)
+VARIABLE: yP (int)
+VARIABLE: col (int)
+VARIABLE: row (int)
+VARIABLE: r (Rectangle)
+METHOD: generateHoriPath (void)
+VARIABLE: room (RoomRoot)
+VARIABLE: xP (int)
+VARIABLE: yP (int)
+VARIABLE: xS (int)
+VARIABLE: yS (int)
+VARIABLE: r (Rectangle)
+VARIABLE: x (int)
+METHOD: generateVertPath (void)
+VARIABLE: room (RoomRoot)
+VARIABLE: xP (int)
+VARIABLE: yP (int)
+VARIABLE: xS (int)
+VARIABLE: yS (int)
+VARIABLE: r (Rectangle)
+VARIABLE: y (int)
+
+OBFUSCATE FILE fxtest.java
+IMPORT: Application
+IMPORT: Stage
+IMPORT: Group
+IMPORT: Scene
+CLASS: fxtest
+IGNORE METHOD: main (void)
+IGNORE VARIABLE: args (String)
+IGNORE METHOD: start (void)
+IGNORE VARIABLE: stage (Stage)
+VARIABLE: items (Group)
+VARIABLE: scene (Scene)
+VARIABLE: m (bspMap)
+
+OBFUSCATE FILE Room.java
+CLASS: Room
+VARIABLE: xPos (int)
+VARIABLE: yPos (int)
+VARIABLE: xScl (int)
+VARIABLE: yScl (int)
+VARIABLE: xP (int)
+VARIABLE: yP (int)
+VARIABLE: xS (int)
+VARIABLE: yS (int)
+METHOD: setXPos (void)
+VARIABLE: xP (int)
+METHOD: setYPos (void)
+VARIABLE: yP (int)
+METHOD: setXScl (void)
+VARIABLE: xS (int)
+METHOD: setYScl (void)
+VARIABLE: yS (int)
+METHOD: getXPos (int)
+METHOD: getYPos (int)
+METHOD: getXScl (int)
+METHOD: getYScl (int)
+
+OBFUSCATE FILE RoomRoot.java
+CLASS: RoomRoot
+VARIABLE: child1 (RoomRoot)
+VARIABLE: child2 (RoomRoot)
+VARIABLE: room (Room)
+VARIABLE: id (int)
+VARIABLE: xP (int)
+VARIABLE: yP (int)
+VARIABLE: xS (int)
+VARIABLE: yS (int)
+METHOD: getChild1 (RoomRoot)
+METHOD: setChild1 (void)
+VARIABLE: child (RoomRoot)
+METHOD: getChild2 (RoomRoot)
+METHOD: setChild2 (void)
+VARIABLE: child (RoomRoot)
+METHOD: getRoom (Room)
+METHOD: setRoom (void)
+VARIABLE: r (Room)
+METHOD: setId (void)
+VARIABLE: num (int)
+METHOD: getId (int)
+
+OBFUSCATE FILE Tile.java
+CLASS: Tile
+VARIABLE: id (int)
+VARIABLE: root (RoomRoot)
+VARIABLE: open (boolean)
+VARIABLE: i (int)
+VARIABLE: room (RoomRoot)
+METHOD: setOpen (void)
+VARIABLE: o (boolean)
+METHOD: isOpen (boolean)
+METHOD: getRoot (RoomRoot)
+IGNORE METHOD: toString (String)
+METHOD: setId (void)
+VARIABLE: num (int)
+METHOD: getId (int)
+
+SCAN DONE
+
+CREATING CYPHER
+bspMap // _0
+fxtest // _1
+Room // _2
+RoomRoot // _3
+Tile // _4
+map // _5
+size // _6
+subdiv // _7
+idCount // _8
+group // _9
+absRoot // _10
+g // _11
+display // _12
+col // _13
+row // _14
+divide // _15
+root // _16
+count // _17
+xSi // _18
+x // _19
+child1 // _20
+child2 // _21
+r // _22
+ySi // _23
+y // _24
+generateRoom // _25
+xPad // _26
+yPad // _27
+xS // _28
+yS // _29
+xP // _30
+yP // _31
+generateHoriPath // _32
+room // _33
+generateVertPath // _34
+items // _35
+scene // _36
+m // _37
+xPos // _38
+yPos // _39
+xScl // _40
+yScl // _41
+setXPos // _42
+setYPos // _43
+setXScl // _44
+setYScl // _45
+getXPos // _46
+getYPos // _47
+getXScl // _48
+getYScl // _49
+id // _50
+getChild1 // _51
+setChild1 // _52
+child // _53
+getChild2 // _54
+setChild2 // _55
+getRoom // _56
+setRoom // _57
+setId // _58
+num // _59
+getId // _60
+open // _61
+i // _62
+setOpen // _63
+o // _64
+isOpen // _65
+getRoot // _66
+
+CREATED FILE _0.java
+CREATED FILE _1.java
+CREATED FILE _2.java
+CREATED FILE _3.java
+CREATED FILE _4.java

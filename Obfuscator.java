@@ -22,24 +22,52 @@ public class Obfuscator
     private ArrayList<String> methods = new ArrayList<String>(); //names of methods
     private ArrayList<Cypher> cypher = new ArrayList<Cypher>(); //cyphered names
     private File[] files;
+    private Formatter log;
     
-    //obsolete, use for testing later or something
-    public enum StatementType
-    {IMPORT, CLASSDEC, VARDEC, METHODDEC, OTHER}
-    
-    //PCJO_IGNORE_2
+    //<PCJO_IGNORE_2>
     public static void main(String[] args)
     {
-        //Obfuscator ob = new Obfuscator("KTour.java", false);
-        Obfuscator ob = new Obfuscator("bsptest", true);
-        //System.out.println(ob.readWord());
+        if (args.length == 1)
+            obfuscate(args[0]);
+        else
+            System.out.println("Error: 1 arguement expected, " 
+            + args.length + " recieved");
+        //Obfuscator ob = new Obfuscator("KTour.java");
+        //Obfuscator ob = new Obfuscator("bsptest");
+        //Obfuscator ob = new Obfuscator("test.java");
+        //writeLog(ob.readWord());
     }
     
     /**
-     * note, i think File has a "isDirectory" method or something
+     * Obfuscates the given .java file, or all .java files in the folder within the input folder
+     * @param path path to file or folder within input folder
      */
-    public Obfuscator(String path, boolean isFolder)
+    public static void obfuscate(String path)
     {
+        Obfuscator ob = new Obfuscator(path);
+    }
+    
+    private void writeLog(String str)
+    {
+        System.out.println(str);
+        log.format(str + "\n");
+    }
+    
+    public Obfuscator(String path)
+    {
+        //creates log file
+        log = null;
+        try
+        {
+            log = new Formatter("output/log.txt.");
+            writeLog("CREATED LOG FILE");
+        }
+        catch (Exception e)
+        {
+            System.out.println("ERROR: COULD NOT CREATE LOG FILE:\n" + e);
+            return;
+        }
+        
         //adds basic data types
         dataTypes.add("boolean");
         dataTypes.add("byte");
@@ -56,20 +84,25 @@ public class Obfuscator
         dataTypes.add("Object");
         dataTypes.add("Exception");
         
-        if (isFolder)
-            obFolder(path);
+        //writeLog(""+new File(path).isDirectory());
+        File file = new File("input/" + path);
+        
+        //obfuscated according to file type
+        if (file.isDirectory())
+            obFolder(file);
         else
-            obFile(path);
+            obFile(file);
+        
+        log.close();
     }
     
     /**
      * Obfuscates all .java files in a folder
-     * its really just a work around my own garbage code
      */
-    private void obFolder(String path)
+    private void obFolder(File files)
     {
-        System.out.println("OBFUSCATE FOLDER " + path);
-        File[] allFiles = new File(path).listFiles();
+        writeLog("OBFUSCATE FOLDER " + files.getName());
+        File[] allFiles = files.listFiles();
         ArrayList<File> javaFiles = new ArrayList<File>();
         //determines which files are .java's
         for (File f: allFiles)
@@ -78,6 +111,7 @@ public class Obfuscator
             if (name.substring(name.length()-5,name.length()).equals(".java"))
             {
                 javaFiles.add(f);
+                //registers file name as a data type
                 String className = f.getName().substring(0,f.getName().length()-5);
                 cypher.add(new Cypher(className));
                 dataTypes.add(className);
@@ -89,7 +123,7 @@ public class Obfuscator
         ArrayList<ArrayList<Figure>> fileFigs = new ArrayList<ArrayList<Figure>>();
         for (File f: javaFiles)
         {
-            System.out.println("\nOBFUSCATE FILE " + f.getName());
+            writeLog("\nOBFUSCATE FILE " + f.getName());
             //opens file
             try 
             {
@@ -97,7 +131,8 @@ public class Obfuscator
             }
             catch (Exception e)
             {
-                //dont
+                writeLog("\nERROR: COULD NOT READ FILE:\n" + e);
+                return;
             }
             
             //reads file into text
@@ -109,28 +144,35 @@ public class Obfuscator
             line = 0;
             figPos = 0;
             
+            //simplifies code
             simplifyNQ();
+            //scans simplified code for identification
             scanFig();
             
             fileFigs.add(simp);
             simp = new ArrayList<Figure>();
         }
         
+        writeLog("\nSCAN DONE\n");
+        //logs code cypher
+        writeLog("CREATING CYPHER");
         generateCypher();
-        System.out.println("SCAN DONE");
         for (Cypher c: cypher)
         {
-            System.out.println(c.getOriginal() + " // " + c.getCoded());
+            writeLog(c.getOriginal() + " // " + c.getCoded());
         }
+        writeLog("");
         
         for (int i = 0; i < javaFiles.size(); i++)
         {
             File file = javaFiles.get(i);
-            ArrayList<Figure> simpFile = fileFigs.get(i);
+            /*ArrayList<Figure> simpFile*/ simp = fileFigs.get(i);
             String name = file.getName().substring(0,file.getName().length()-5);
-            simp = simpFile;
+            //simp = simpFile;
             obSimp = new ArrayList<Figure>();
+            //obfuscates the simplified file
             obfuscateFig();
+            //obfuscates the file name
             for (int j = 0; j < cypher.size(); j++)
             {
                 if (name.equals(cypher.get(j).getOriginal()))
@@ -139,6 +181,7 @@ public class Obfuscator
                     j = cypher.size();
                 }
             }
+            //creates obfuscatee file
             createObfuscated(name);
         }
     }
@@ -146,18 +189,22 @@ public class Obfuscator
     /**
      * Obfuscates a single file
      */
-    private void obFile(String path)
+    private void obFile(File file)
     {
-        System.out.println("OBFUSCATE FILE " + path);
+        writeLog("OBFUSCATE FILE " + file.getName());
         //opens file
         try 
         {
-            scanner = new Scanner(new File(path));
+            scanner = new Scanner(file);
         }
         catch (Exception e)
         {
-            //dont
+            writeLog("\nERROR: COULD NOT READ FILE:\n" + e);
+            return;
         }
+        
+        String className = file.getName().substring(0,file.getName().length()-5);
+        String obClassName = "obClassName";
         
         //reads file into text
         text = new ArrayList<String>();
@@ -165,43 +212,51 @@ public class Obfuscator
             text.add(scanner.nextLine());
         activeLine = text.get(0);
         
-        simplifyNQ();
-        scanFig();
-        generateCypher();
-        System.out.println("SCAN DONE");
+        simplifyNQ(); //simplified code
+        scanFig(); //scans simplified code
+        generateCypher(); //generates code cypher
+        writeLog("SCAN DONE");
+        //logs code cypher
         for (Cypher c: cypher)
         {
-            System.out.println(c.getOriginal() + " // " + c.getCoded());
+            writeLog(c.getOriginal() + " // " + c.getCoded());
+            if (c.getOriginal().equals(className))
+                obClassName = c.getCoded();
         }
-        obfuscateFig();
-        createObfuscated("obfuscatedfile");
-        System.out.println("DONE");
+        obfuscateFig(); //obfuscates simple code
+        createObfuscated(obClassName + ".java"); //creates obfuscated file
+        writeLog("DONE");
     }
     
     private void createObfuscated(String name)
     {
+        //attempts to create file
         Formatter f = null;
         try
         {
-            f = new Formatter(name);
-            System.out.println("CREATED FILE " + name);
+            f = new Formatter("output/" + name);
+            writeLog("CREATED FILE " + name);
         }
         catch (Exception e)
         {
-            System.out.println("FILE ERROR");
+            writeLog("ERROR: COULD NOT CREATE NEW FILE:\n" + e);
+            return;
         }
         if (f != null)
         {   
+            //adds first parts
             f.format(obSimp.get(0).getText());
             for (int i = 1; i < obSimp.size(); i++)
             {
+                //adds subsequent parts, includes a space if the last
+                //and current part are both words
                 if (obSimp.get(i-1).getType() == Figure.FigureType.WORD
                 && obSimp.get(i).getType() == Figure.FigureType.WORD)
                     f.format(" ");
                 f.format(obSimp.get(i).getText());
             }
+            f.close();
         }
-        f.close();
     }
     
     /**
@@ -215,17 +270,23 @@ public class Obfuscator
             if (classStarted)
             {
                 //checks if the figure is a name that needs to be obfuscated
-                boolean nonOb = true; //tracks if figure is an obfuscated figure
-                for (int i = 0; i < cypher.size(); i++)
+                if (f.getType() == Figure.FigureType.WORD)
                 {
-                    if (f.getText().equals(cypher.get(i).getOriginal()))
+                    String text = f.getText();
+                    boolean nonOb = true; //tracks if figure is an obfuscated figure
+                    for (int i = 0; i < cypher.size(); i++)
                     {
-                        obSimp.add(new Figure(cypher.get(i).getCoded(), Figure.FigureType.WORD));
-                        nonOb = false;
-                        i = cypher.size();
+                        if (text.equals(cypher.get(i).getOriginal()))
+                        {
+                            obSimp.add(new Figure(cypher.get(i).getCoded(), Figure.FigureType.WORD));
+                            nonOb = false;
+                            i = cypher.size();
+                        }
                     }
+                    if (nonOb)// && f.getType() != Figure.FigureType.IGNORE)
+                        obSimp.add(f);
                 }
-                if (nonOb && f.getType() != Figure.FigureType.IGNORE)
+                else if (f.getType() != Figure.FigureType.IGNORE)
                     obSimp.add(f);
             }
             else
@@ -250,14 +311,14 @@ public class Obfuscator
     }
     
     /**
-     * simplifies code with quotes
-     * wip stuff fix later idiot
+     * Simplifies code with quotes
      */
     private void simplifyNQ()
     {
         while (canAdvance())
         {
             seekNQ();
+            //determines if the next character is the start of an identifier or a symbol
             if (Character.isLetterOrDigit(activeLine.charAt(linePos)))
             {
                 String word = readWordNQ();
@@ -269,6 +330,7 @@ public class Obfuscator
                 String symb = activeLine.substring(linePos,linePos+1);
                 //System.out.print(symb);
                 simp.add(new Figure(symb,Figure.FigureType.SYMBOL));
+                //checks if the character starts a quote
                 if (symb.equals("\"") || symb.equals("\'"))
                 {
                     String quote = "";
@@ -293,8 +355,13 @@ public class Obfuscator
                                     flag = false;
                             }
                         }
-                        else
+                        else 
+                        {
+                            //finishes reading without end quote, throws an error
+                            writeLog("ERROR: MISSING END QUOTE");
                             flag = false;
+                            return;
+                        }
                         if (flag)
                             quote += activeLine.charAt(linePos);
                         advance();
@@ -332,7 +399,7 @@ public class Obfuscator
                 //IMPORT
                 dataTypes.add(name);
                 figPos++;
-                System.out.println("IMPORT: " + name);
+                writeLog("IMPORT: " + name);
             }
             else if (word.equals("new"))
             {
@@ -387,11 +454,11 @@ public class Obfuscator
                                     methods.add(name);
                                     //cypher.add(new Cypher(name));
                                     addCypher(name);
-                                    System.out.println("METHOD: " + name + " (" + word + ")");
+                                    writeLog("METHOD: " + name + " (" + word + ")");
                                 }
                                 else
                                 {
-                                    System.out.println("IGNORE METHOD: " + name + " (" + word + ")");
+                                    writeLog("IGNORE METHOD: " + name + " (" + word + ")");
                                     ignore--;
                                 }
                                 figPos++;
@@ -404,11 +471,11 @@ public class Obfuscator
                                     variables.add(name);
                                     //cypher.add(new Cypher(name));
                                     addCypher(name);
-                                    System.out.println("VARIABLE: " + name + " (" + word + ")");
+                                    writeLog("VARIABLE: " + name + " (" + word + ")");
                                 }
                                 else
                                 {
-                                    System.out.println("IGNORE VARIABLE: " + name + " (" + word + ")");
+                                    writeLog("IGNORE VARIABLE: " + name + " (" + word + ")");
                                     ignore--;
                                 }
                                 figPos++;
@@ -426,9 +493,44 @@ public class Obfuscator
                     dataTypes.add(name);
                     //cypher.add(new Cypher(name));
                     addCypher(name);
-                    System.out.println("CLASS: " + name);
+                    writeLog("CLASS: " + name);
                     while (simp.get(figPos).getType() != Figure.FigureType.SYMBOL)
                         figPos++;
+                }
+                else if (word.equals("enum"))
+                {
+                    figPos++;
+                    String name = simp.get(figPos).getText();
+                    dataTypes.add(name);
+                    addCypher(name);
+                    writeLog("ENUM: " + name);
+                    figPos+=2;
+                    
+                    if (!simp.get(figPos).getText().equals("}"))
+                    {
+                        name = simp.get(figPos).getText();
+                        variables.add(name);
+                        addCypher(name);
+                        figPos++;
+                        
+                        Figure fig = simp.get(figPos);
+                        while (!fig.getText().equals("}"))
+                        {
+                            if (fig.getText().equals(","))
+                            {
+                                figPos++;
+                                name = simp.get(figPos).getText();
+                                variables.add(name);
+                                addCypher(name);
+                                figPos++;
+                            }
+                            else
+                            {
+                                //this should not occur, should throw error
+                            }
+                            fig = simp.get(figPos);
+                        }
+                    }
                 }
                 else
                 {
@@ -458,7 +560,6 @@ public class Obfuscator
     
     /**
      * version of seek that does not ignore quotes
-     * wip stuff, should make irrelevant later
      */
     private void seekNQ()
     {
@@ -484,14 +585,27 @@ public class Obfuscator
                             //checks for manual ignore
                             String rem = activeLine.substring(linePos+2);
                             //checks if remaining line is long enough 
-                            if (rem.length() >= 13)
+                            if (rem.length() >= 15)
                             {
-                                int i = rem.indexOf("PCJO_IGNORE_"); //13 long
-                                //note: only allows up to 9 ignores from one statement
-                                if (i >= 0)
+                                //start of the ignore signal
+                                int start = rem.indexOf("<PCJO_IGNORE_"); //15+ long
+                                if (start >= 0)
                                 {
-                                    int count = Integer.parseInt(rem.substring(i + 12,i + 13));
-                                    simp.add(new Figure("<ignore" + count + ">",Figure.FigureType.IGNORE));
+                                    //end of the ignore signal
+                                    int end = rem.indexOf(">");
+                                    if (start < end)
+                                    {
+                                        //attempts to read the number
+                                        try
+                                        {
+                                            int count = Integer.parseInt(rem.substring(start + 13,end));
+                                            simp.add(new Figure("<ignore" + count + ">",Figure.FigureType.IGNORE));
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            //does nothing if the number count not be read
+                                        }
+                                    }
                                 }
                             }
                             //skips to the next line
@@ -548,7 +662,6 @@ public class Obfuscator
     
     /**
      * version of readword that doesnt ignore quotes
-     * wip stuff
      */
     private String readWordNQ()
     {

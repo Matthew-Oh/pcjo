@@ -14,6 +14,7 @@ public class Tile
     
     public RoomRoot getRoot() {return root;}
     
+	//<PCJO_IGNORE_1>
     public String toString() 
     {
         if (id < 10)
