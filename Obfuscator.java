@@ -376,8 +376,7 @@ public class Obfuscator
     }
     
     /**
-     * Scans the condenced source code
-     * obsolete (probably)????
+     * Scans the condensed source code
      */
     private void scanFig()
     {
